@@ -33,6 +33,11 @@ defmodule Cotizador do
     descuento = descuento(flete_bruto, embarque.peso_kg, reglas.descuento)
     flete = flete_bruto - descuento
     cuota_puente = Map.fetch!(reglas.cuota_puente, embarque.puente)
+    regla_recargo = Map.fetch!(reglas.recargo, embarque.tipo)
+    base = base_recargo(flete, cuota_puente, reglas.base_recargo)
+    recargo = pct(base, regla_recargo.pct) + regla_recargo.fija
+    subtotal = flete + cuota_puente + recargo
+    total = max(subtotal, reglas.minimo)
 
     %{
       id: embarque.id,
@@ -40,9 +45,9 @@ defmodule Cotizador do
       descuento: descuento,
       flete: flete,
       cuota_puente: cuota_puente,
-      recargo: 0,
-      ajuste_minimo: 0,
-      total: flete + cuota_puente
+      recargo: recargo,
+      ajuste_minimo: total - subtotal,
+      total: total
     }
   end
 
@@ -59,6 +64,10 @@ defmodule Cotizador do
        do: pct(flete_bruto, porcentaje)
 
   defp descuento(_flete_bruto, _peso_kg, _reglas_descuento), do: 0
+
+  defp base_recargo(flete, _cuota_puente, :flete), do: flete
+
+  defp base_recargo(flete, cuota_puente, :subtotal), do: flete + cuota_puente
 
   defp pct(monto, porcentaje), do: div(monto * porcentaje + 50, 100)
 end
