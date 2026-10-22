@@ -7,6 +7,39 @@ defmodule Cotizador do
     end
   end
 
+  def resumen(embarques, reglas) do
+    inicial = %{
+      cotizados: 0,
+      rechazados: [],
+      total: 0,
+      por_puente: Map.new(reglas.cuota_puente, fn {puente, _cuota} -> {puente, 0} end)
+    }
+
+    resultado =
+      embarques
+      |> Enum.map(fn embarque -> {embarque, cotizar(embarque, reglas)} end)
+      |> Enum.reduce(inicial, fn
+        {embarque, {:ok, cotizacion}}, acumulador ->
+          %{
+            acumulador
+            | cotizados: acumulador.cotizados + 1,
+              total: acumulador.total + cotizacion.total,
+              por_puente:
+                Map.update!(acumulador.por_puente, embarque.puente, &(&1 + cotizacion.total))
+          }
+
+        {embarque, {:error, motivo}}, acumulador ->
+          %{acumulador | rechazados: [{embarque.id, motivo} | acumulador.rechazados]}
+      end)
+
+    %{resultado | rechazados: invertir_rechazados(resultado.rechazados, [])}
+  end
+
+  defp invertir_rechazados([], acumulador), do: acumulador
+
+  defp invertir_rechazados([rechazo | resto], acumulador),
+    do: invertir_rechazados(resto, [rechazo | acumulador])
+
   defp validar(%{peso_kg: p}, _reglas) when p <= 0, do: {:error, :peso_invalido}
 
   defp validar(%{distancia_km: d}, _reglas) when d <= 0, do: {:error, :distancia_invalida}
