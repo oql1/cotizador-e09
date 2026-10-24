@@ -42,7 +42,7 @@ export const POLITICAS: Record<Tipo, Politica> = {
     pct:12,
     fija:20000,
     documento:null,
-    etiqueta:'Perecedera · caduca en 72 Horas'
+    etiqueta:'Perecedera · caduca en 72 h'
 
   }
 }
