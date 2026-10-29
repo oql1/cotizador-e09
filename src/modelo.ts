@@ -163,6 +163,11 @@ export function cotizar(b: Borrador, r: Reglas): Cotizado | Rechazado {
   };
 }
 
-export function despachar(_c: Cotizado, _folio: string): Despachado {
-  throw new Error("por implementar");
+export function despachar(c: Cotizado, folio: string): Despachado {
+  return {
+    estado: "despachado",
+    embarque: c.embarque,
+    cotizacion: c.cotizacion,
+    folio,
+  };
 }
